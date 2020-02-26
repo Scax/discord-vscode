@@ -23,6 +23,8 @@
 * Debug mode detection
 * Easily manually reconnect to Discord
 * VSCode Live Share support
+* Shows idle 5 minutes after switching to another program (configurable duration)
+* Shows duration VsCode is unfocused (enabled by default)
 
 ## Troubleshooting
 

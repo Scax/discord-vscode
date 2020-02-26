@@ -153,6 +153,31 @@
 						},
 						"default": [],
 						"description": "Patterns of workspaces to ignore"
+					},
+					"discord.unfocusedAfter":{
+						"type":"number",
+						"default":"0",
+						"description": "Time in miliseconds before setting unfocused status"
+					},
+					"discord.watchForUnfocus":{
+						"type":"boolean",
+						"default":"true",
+						"description": "Watch for unfocused state"
+					},
+					"discord.showUnfocusedTime":{
+						"type":"boolean",
+						"default":"false",
+						"description": "Show unfocused time"
+					},
+					"discord.detailsUnfocused":{
+						"type":"string",
+						"default":"Idling",
+						"description": "Custom string for the details section of the rich presence when unfocused\n\t- '{null}' will be replaced with an empty space."
+					},
+					"discord.lowerDetailsUnfocused": {
+						"type": "string",
+						"default": "Idling",
+						"description": "Custom string for the state section of the rich presence when unfocused\n\t- '{null}' will be replaced with an empty space."
 					}
 				}
 			}

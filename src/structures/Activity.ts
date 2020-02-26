@@ -41,6 +41,9 @@ export default class Activity implements Disposable {
 
 	private _lastKnownFile = '';
 
+	private unfocusedTimestamp: number | null = null;
+	private isUnfocused = false;
+	private isUnfocusedOld = false;
 	// eslint-disable-next-line no-useless-constructor
 	public constructor(public client: RPCClient) {}
 
@@ -50,7 +53,33 @@ export default class Activity implements Disposable {
 
 	public async generate(workspaceElapsedTime = false) {
 		let largeImageKey: any = 'vscode-big';
-		if (window.activeTextEditor) {
+
+		const unfocusedAfter = this.client.config.get<number>('unfocusedAfter');
+		const watchForUnfocus = this.client.config.get<boolean>('watchForUnfocus');
+		const showUnfocusedTime = this.client.config.get<boolean>('showUnfocusedTime');
+		this.isUnfocusedOld = this.isUnfocused;
+		this.isUnfocused = false;
+		if (watchForUnfocus) {
+			if (window.state.focused) {
+				this.unfocusedTimestamp = null;
+			} else {
+				if (this.unfocusedTimestamp) {
+					if (unfocusedAfter && unfocusedAfter > 0 && new Date().getTime() - this.unfocusedTimestamp > unfocusedAfter) {
+						this.isUnfocused = true;
+					}
+				}
+
+				if (!this.unfocusedTimestamp) {
+					this.unfocusedTimestamp = new Date().getTime();
+				}
+			}
+		} else {
+			this.isUnfocused = false;
+			this.isUnfocusedOld = false;
+		}
+		console.log('isUnfocused', this.isUnfocused);
+
+		if (window.activeTextEditor && !this.isUnfocused) {
 			if (window.activeTextEditor.document.languageId === 'Log') return this._state;
 			if (this._state && window.activeTextEditor.document.fileName === this._lastKnownFile) {
 				return (this._state = {
@@ -59,6 +88,7 @@ export default class Activity implements Disposable {
 						'detailsDebugging',
 						'detailsEditing',
 						'detailsIdle',
+						'detailsUnfocused',
 						this._state.largeImageKey,
 					),
 					smallImageKey: debug.activeDebugSession
@@ -70,6 +100,7 @@ export default class Activity implements Disposable {
 						'lowerDetailsDebugging',
 						'lowerDetailsEditing',
 						'lowerDetailsIdle',
+						'lowerDetailsUnfocused',
 						this._state.largeImageKey,
 					),
 				});
@@ -94,19 +125,37 @@ export default class Activity implements Disposable {
 		let previousTimestamp = null;
 		if (this._state?.startTimestamp) previousTimestamp = this._state.startTimestamp;
 
-		this._state = {
-			...this._state,
-			details: await this._generateDetails('detailsDebugging', 'detailsEditing', 'detailsIdle', largeImageKey),
-			startTimestamp:
+		let StartTimestamp =
 				window.activeTextEditor && previousTimestamp && workspaceElapsedTime
 					? previousTimestamp
 					: window.activeTextEditor
 					? new Date().getTime()
-					: null,
+				: null;
+
+		const unfocusedTime =
+			this.isUnfocused && this.isUnfocusedOld
+				? previousTimestamp
+				: this.isUnfocused
+				? this.unfocusedTimestamp
+				: StartTimestamp;
+
+		StartTimestamp = showUnfocusedTime ? unfocusedTime : this.isUnfocused ? null : StartTimestamp;
+
+		this._state = {
+			...this._state,
+			details: await this._generateDetails(
+				'detailsDebugging',
+				'detailsEditing',
+				'detailsIdle',
+				'detailsUnfocused',
+				largeImageKey,
+			),
+			startTimestamp: StartTimestamp,
 			state: await this._generateDetails(
 				'lowerDetailsDebugging',
 				'lowerDetailsEditing',
 				'lowerDetailsIdle',
+				'lowerDetailsUnfocused',
 				largeImageKey,
 			),
 			largeImageKey: largeImageKey ? largeImageKey.image || largeImageKey : 'txt',
@@ -240,7 +289,13 @@ export default class Activity implements Disposable {
 		this._lastKnownFile = '';
 	}
 
-	private async _generateDetails(debugging: string, editing: string, idling: string, largeImageKey: any) {
+	private async _generateDetails(
+		debugging: string,
+		editing: string,
+		idling: string,
+		unfocused: string,
+		largeImageKey: any,
+	) {
 		let raw = this.client.config.get<string>(idling)!.replace('{null}', empty);
 		let filename = null;
 		let dirname = null;
@@ -248,7 +303,12 @@ export default class Activity implements Disposable {
 		let workspaceName = null;
 		let workspaceFolder = null;
 		let fullDirname = null;
-		if (window.activeTextEditor) {
+
+		if (this.isUnfocused) {
+			raw = this.client.config.get<string>(unfocused)!.replace('{null}', empty);
+		}
+
+		if (window.activeTextEditor && !this.isUnfocused) {
 			filename = basename(window.activeTextEditor.document.fileName);
 
 			const { dir } = parse(window.activeTextEditor.document.fileName);
