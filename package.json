@@ -156,6 +156,7 @@
 					},
 					"discord.unfocusedAfter":{
 						"type":"number",
+						"default":"300000",
 						"description": "Time in milliseconds before setting unfocused status"
 					},
 					"discord.watchForUnfocus":{
