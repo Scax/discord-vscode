@@ -77,7 +77,6 @@ export default class Activity implements Disposable {
 			this.isUnfocused = false;
 			this.isUnfocusedOld = false;
 		}
-		console.log('isUnfocused', this.isUnfocused);
 
 		if (window.activeTextEditor && !this.isUnfocused) {
 			if (window.activeTextEditor.document.languageId === 'Log') return this._state;
@@ -126,10 +125,10 @@ export default class Activity implements Disposable {
 		if (this._state?.startTimestamp) previousTimestamp = this._state.startTimestamp;
 
 		let StartTimestamp =
-				window.activeTextEditor && previousTimestamp && workspaceElapsedTime
-					? previousTimestamp
-					: window.activeTextEditor
-					? new Date().getTime()
+			window.activeTextEditor && previousTimestamp && workspaceElapsedTime
+				? previousTimestamp
+				: window.activeTextEditor
+				? new Date().getTime()
 				: null;
 
 		const unfocusedTime =
