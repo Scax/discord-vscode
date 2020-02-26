@@ -165,7 +165,7 @@
 					},
 					"discord.showUnfocusedTime":{
 						"type":"boolean",
-						"default":"false",
+						"default":false,
 						"description": "Show unfocused time"
 					},
 					"discord.detailsUnfocused":{
