@@ -55,6 +55,7 @@ export default class Activity implements Disposable {
 			if (this._state && window.activeTextEditor.document.fileName === this._lastKnownFile) {
 				return (this._state = {
 					...this._state,
+					startTimestamp:this._state?.startTimestamp?this._state.startTimestamp:new Date().getTime(),
 					details: await this._generateDetails(
 						'detailsDebugging',
 						'detailsEditing',
